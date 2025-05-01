@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Bird - Enhanced</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Press Start 2P', cursive;
+  background: linear-gradient(to bottom, #70c5ce, #b4e0ec);
+  color: #222;
+  text-align: center;
+}
+    body {
+  margin: 0;
+  font-family: 'Press Start 2P', cursive;
+  
+ background: linear-gradient(to bottom, #70c5ce, #b4e0ec);
+  color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding: 30px;
+}
+
+#mainContainer {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+#gameInfo {
+  max-width: 300px;
+  text-align: left;
+  font-size: 10px;
+  background: #ffffffcc;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #00000030;
+}
+
+#gameInfo h1 {
+  font-size: 18px;
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+#gameInfo ul {
+  list-style: none;
+  padding-left: 0;
+  line-height: 1.5em;
+}
+
+#startBtn {
+  background: #ffd700;
+  color: black;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 12px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 2px 2px 5px #333;
+}
+
+canvas {
+  border: 4px solid #000;
+  background: #70c5ce;
+  display: block;
+}
+
+  </style>
+</head>
+<body>
+  <div id="mainContainer">
+    <div id="gameInfo">
+      <h1>🕹️ Flappy Bird</h1>
+      <p><strong>Controls:</strong></p>
+      <ul>
+        <li>⬆ Press <b>Space</b> to flap</li>
+        <li>🔄 Press <b>R</b> to restart</li>
+        <li>🤖 Press <b>A</b> to toggle AI mode</li>
+      </ul>
+      <p><strong>Tips:</strong></p>
+      <ul>
+        <li>Avoid hitting pipes or ground</li>
+        <li>Stay steady and time your flaps</li>
+        <li>AI learns as it plays!</li>
+      </ul>
+      <button id="startBtn">▶ Start Game</button>
+    </div>
+
+    <canvas id="gameCanvas" width="300" height="400"></canvas>
+  </div>
+
+
+<script>
+  window.onload = function () {
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let gameRunning = false;
+    let gameOver = false;
+    let aiEnabled = false;
+
+    const gravity = 0.5;
+    const jumpStrength = -10;
+    const pipeWidth = 60;
+    const pipeGap = 150;
+    let score = 0;
+    let pipeTimer = 0;
+
+    const bird = {
+      x: 80,
+      y: 200,
+      radius: 15,
+      velocity: 0,
+      update() {
+        this.velocity += gravity;
+        this.y += this.velocity;
+
+        if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+          gameOver = true;
+        }
+      },
+      jump() {
+        this.velocity = jumpStrength;
+      },
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = aiEnabled ? "orange" : "yellow";
+        ctx.fill();
+        ctx.stroke();
+      }
+    };
+
+    const pipes = [];
+
+    function createPipe() {
+      const top = Math.random() * (canvas.height - pipeGap - 100) + 20;
+      pipes.push({
+        x: canvas.width,
+        topHeight: top,
+        bottomY: top + pipeGap,
+        passed: false
+      });
+    }
+
+    function drawPipes() {
+      ctx.fillStyle = "green";
+      pipes.forEach(pipe => {
+        ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
+        ctx.fillRect(pipe.x, pipe.bottomY, pipeWidth, canvas.height - pipe.bottomY);
+      });
+    }
+
+    function updatePipes() {
+      pipes.forEach(pipe => {
+        pipe.x -= 2;
+
+        if (
+          bird.x + bird.radius > pipe.x &&
+          bird.x - bird.radius < pipe.x + pipeWidth &&
+          (bird.y - bird.radius < pipe.topHeight || bird.y + bird.radius > pipe.bottomY)
+        ) {
+          gameOver = true;
+        }
+
+        if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+          score++;
+          pipe.passed = true;
+        }
+      });
+
+      if (pipes.length && pipes[0].x + pipeWidth < 0) {
+        pipes.shift();
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "12px 'Press Start 2P'";
+      ctx.fillText("Score: " + score, 10, 30);
+      if (aiEnabled) {
+        ctx.fillStyle = "orange";
+        ctx.fillText("AI MODE", 150, 30);
+      }
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "red";
+      ctx.font = "14px 'Press Start 2P'";
+      ctx.fillText("GAME OVER", 40, canvas.height / 2);
+      ctx.font = "10px 'Press Start 2P'";
+      ctx.fillText("Press R to Restart", 20, canvas.height / 2 + 40);
+    }
+
+    function resetGame() {
+      score = 0;
+      bird.y = 200;
+      bird.velocity = 0;
+      pipes.length = 0;
+      gameOver = false;
+      pipeTimer = 0;
+    }
+
+    function maybeAIFlap() {
+      if (!aiEnabled || gameOver) return;
+
+      const nextPipe = pipes.find(p => p.x + pipeWidth > bird.x);
+      if (nextPipe) {
+        const targetY = nextPipe.bottomY - pipeGap / 2;
+        if (bird.y > targetY) {
+          bird.jump();
+        }
+      }
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      bird.update();
+      maybeAIFlap();
+      bird.draw();
+
+      if (!gameOver) {
+        if (pipeTimer % 90 === 0) createPipe();
+        pipeTimer++;
+        updatePipes();
+        drawPipes();
+        drawScore();
+      } else {
+        drawPipes();
+        drawScore();
+        drawGameOver();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Controls
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && !gameOver && gameRunning && !aiEnabled) {
+        bird.jump();
+      }
+      if (e.code === "KeyR" && gameRunning) {
+        resetGame();
+      }
+      if (e.code === "KeyA") {
+        aiEnabled = !aiEnabled;
+      }
+    });
+
+    document.getElementById("startBtn").onclick = () => {
+      document.getElementById("startBtn").style.display = "none";
+      gameRunning = true;
+      resetGame();
+      gameLoop();
+    };
+  };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,457 @@
++<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning in Games</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --accent: #f43f5e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/400/320') center/cover;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 2rem;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: var(--dark);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            background: var(--secondary);
+        }
+        
+        .info-section {
+            padding: 5rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary);
+        }
+        
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .card-img {
+            height: 200px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .card-content {
+            padding: 2rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .visualizer {
+            margin: 4rem 0;
+            height: 400px;
+            background: var(--dark);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .node {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .edge {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            transform-origin: left center;
+        }
+        
+        .value {
+            position: absolute;
+            font-size: 0.7rem;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .qlearning-explanation {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 3rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .formula {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1s ease forwards;
+            opacity: 0;
+        }
+        
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">RL-Games</div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Learn</a></li>
+                    <li><a href="flappy.html">Flappy Bird</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <div class="container">
+            <h1 class="fade-in">Reinforcement Learning in Games</h1>
+            <p class="fade-in delay-1">Discover how machines learn to play games through trial and error, just like humans do. But faster!</p>
+            <a href="flappy.html" class="btn fade-in delay-2 pulse">Try Flappy Bird Demo</a>
+        </div>
+    </section>
+    
+    <section class="info-section">
+        <div class="container">
+            <h2 class="section-title fade-in">What is Reinforcement Learning?</h2>
+            
+            <div class="cards">
+                <div class="card fade-in delay-1">
+                    <div class="card-img">🎮</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Definition</h3>
+                        <p>Reinforcement Learning is a type of machine learning where an agent learns to make decisions by taking actions in an environment to maximize cumulative reward.</p>
+                    </div>
+                </div>
+                
+                <div class="card fade-in delay-2">
+                    <div class="card-img">🧠</div>
+                    <div class="card-content">
+                        <h3 class="card-title">How It Works</h3>
+                        <p>The agent interacts with its environment, takes actions, observes results, receives rewards/penalties, and adjusts its strategy to maximize long-term rewards.</p>
+                    </div>
+                </div>
+                
+                <div class="card fade-in delay-3">
+                    <div class="card-img">🎯</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Applications in Games</h3>
+                        <p>RL excels in games because they provide clear rules, states, actions, and rewards. It's been used to master chess, Go, Dota 2, StarCraft II, and many other games.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualizer" id="rl-visualizer">
+                <!-- Dynamic RL visualization will be rendered here -->
+            </div>
+            
+            <div class="qlearning-explanation fade-in">
+                <h3>Q-Learning: The Foundation of Game AI</h3>
+                <p>Q-Learning is one of the most popular reinforcement learning algorithms. It creates a "Q-table" that maps state-action pairs to expected rewards.</p>
+                
+                <div class="formula">
+                    Q(s,a) ← Q(s,a) + α[r + γ·max<sub>a'</sub>Q(s',a') - Q(s,a)]
+                </div>
+                
+                <p>Where:</p>
+                <ul>
+                    <li><strong>Q(s,a)</strong>: Value of taking action a in state s</li>
+                    <li><strong>α</strong>: Learning rate (how quickly new information overrides old)</li>
+                    <li><strong>r</strong>: Reward received</li>
+                    <li><strong>γ</strong>: Discount factor (importance of future rewards)</li>
+                    <li><strong>max<sub>a'</sub>Q(s',a')</strong>: Maximum expected future reward</li>
+                </ul>
+                
+                <p>In games like Flappy Bird, Q-Learning helps the agent learn when to jump based on its current position, pipe distances, and other factors.</p>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>© 2025 RL-Games | <a href="flappy5.html" style="color: var(--secondary)">Play Flappy Bird</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Animation triggers
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            fadeElements.forEach(el => {
+                observer.observe(el);
+            });
+            
+            // RL Visualization
+            const visualizer = document.getElementById('rl-visualizer');
+            
+            // Create nodes (states)
+            const nodeCount = 8;
+            const nodes = [];
+            
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                
+                const x = 100 + (visualizer.offsetWidth - 200) * Math.random();
+                const y = 100 + (visualizer.offsetHeight - 200) * Math.random();
+                
+                node.style.left = `${x}px`;
+                node.style.top = `${y}px`;
+                
+                nodes.push({ element: node, x, y });
+                visualizer.appendChild(node);
+            }
+            
+            // Create edges (actions)
+            nodes.forEach((sourceNode, i) => {
+                // Each node connects to 2-3 other nodes
+                const connectionCount = 2 + Math.floor(Math.random() * 2);
+                
+                for (let c = 0; c < connectionCount; c++) {
+                    let targetIndex;
+                    do {
+                        targetIndex = Math.floor(Math.random() * nodeCount);
+                    } while (targetIndex === i);
+                    
+                    const targetNode = nodes[targetIndex];
+                    
+                    // Create edge
+                    const edge = document.createElement('div');
+                    edge.className = 'edge';
+                    
+                    // Calculate angle and length
+                    const dx = targetNode.x - sourceNode.x;
+                    const dy = targetNode.y - sourceNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    edge.style.width = `${length}px`;
+                    edge.style.left = `${sourceNode.x}px`;
+                    edge.style.top = `${sourceNode.y + 10}px`;
+                    edge.style.transform = `rotate(${angle}deg)`;
+                    
+                    visualizer.appendChild(edge);
+                    
+                    // Create Q-value
+                    const value = document.createElement('div');
+                    value.className = 'value';
+                    value.textContent = (Math.random() * 0.9 + 0.1).toFixed(2);
+                    
+                    value.style.left = `${sourceNode.x + dx/2 - 15}px`;
+                    value.style.top = `${sourceNode.y + dy/2 - 15}px`;
+                    
+                    visualizer.appendChild(value);
+                }
+            });
+            
+            // Animate nodes
+            setInterval(() => {
+                nodes.forEach(node => {
+                    const randX = (Math.random() - 0.5) * 40;
+                    const randY = (Math.random() - 0.5) * 40;
+                    
+                    node.x += randX;
+                    node.y += randY;
+                    
+                    // Keep within bounds
+                    node.x = Math.max(20, Math.min(visualizer.offsetWidth - 20, node.x));
+                    node.y = Math.max(20, Math.min(visualizer.offsetHeight - 20, node.y));
+                    
+                    node.element.style.left = `${node.x}px`;
+                    node.element.style.top = `${node.y}px`;
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
